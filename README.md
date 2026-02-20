@@ -2,16 +2,16 @@
 
 A minimal Python library for reading OIFITS files
 
-The library is designed for scientific analysis workflows (not pipeline reduction) where the user needs a *self-consistent interferometric dataset* extracted from multi-extension OIFITS files — in particular VLTI/GRAVITY data products.
+The library extracts a single, self-consistent interferometric dataset from OIFITS files (e.g. VLTI/GRAVITY products). It is intended as a stable decoding layer for scientific analysis code, not as a full-featured OIFITS framework.
 
 ## Quick Start
 
 ```python
 >>> from astropy.io import fits
->>> from oifits import OI, GRAVITY_SC
+>>> from oifits import OI, GRAVITY_FT
 
 >>> hdul = fits.open("gravity_file.fits")
->>> oi = OI.load(hdul, GRAVITY_SC) # EXTVER
+>>> oi = OI.load(hdul, GRAVITY_FT) # EXTVER
 
 >>> print(oi.t3.t3phi)
 ...
