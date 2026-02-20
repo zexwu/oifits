@@ -33,6 +33,6 @@ class OI_ARRAY(HDUModel):
 
     def _post_decode(self) -> None:
         self.frame = self.header.get("FRAME")
-        self.sta_name = [i.strip() for i in self.sta_name]
+        self.sta_name = np.char.strip(self.sta_name)
         if self.tel_name is not None:
-            self.tel_name = [i.strip() for i in self.tel_name]
+            self.tel_name = np.char.strip(self.sta_name)

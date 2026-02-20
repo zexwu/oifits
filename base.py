@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Any, ClassVar, List, Optional, Sequence, Tuple, Iterable
+from typing import Any, ClassVar, Optional, Sequence, Tuple, Iterable
 
 import numpy as np
 from astropy.io import fits
@@ -42,13 +42,16 @@ class HDUModel:
 
     def __init__(
         self,
-        hdul: List[fits.BinTableHDU],
+        hdul: fits.HDUList,
         extver: Optional[int] = None,
         header_keys: Optional[list[str]] = None,
     ):
         require_extname(hdul, self.EXTNAME)
 
-        hdu = hdul[(self.EXTNAME, extver)]
+        if extver is None:
+            hdu = hdul[self.EXTNAME]
+        else:
+            hdu = hdul[(self.EXTNAME, extver)]
         hdr = hdu.header
         data = hdu.data
 
