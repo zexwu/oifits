@@ -5,7 +5,7 @@ import numpy as np
 from astropy.io import fits
 
 
-def require_extname(hdul: List[fits.BinTableHDU], name: str) -> None:
+def require_extname(hdul: fits.HDUList, name: str) -> None:
     for h in hdul:
         ext = (h.header.get("EXTNAME") or h.name or "").strip().upper()
         if ext == name: return

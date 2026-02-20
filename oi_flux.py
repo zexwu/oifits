@@ -19,7 +19,7 @@ class OI_FLUX(HDUModel):
     sta_index: np.ndarray
 
     flag: np.ndarray
-    fluxdata: np.ndarray
+    flux: np.ndarray
     fluxerr: np.ndarray
 
 

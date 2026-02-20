@@ -22,7 +22,7 @@ class OI:
     extver: int
 
     @classmethod
-    def load(cls, hdul: List[HDUList], extver=None):
+    def load(cls, hdul: HDUList, extver=None):
         return cls(
             array=OI_ARRAY(hdul),
             wavelength=OI_WAVELENGTH(hdul, extver),
