@@ -36,17 +36,15 @@ OI_VIS(
 )
 ```
 
-The object `oi` now contains a single consistent interferometric dataset.
+The object `oi` now contains a single consistent interferometric dataset, offering convenient access to the data and metadata.
 
----
+![./pic.png](showcase)
 
 ## What the Library Does
 
 * Reads OIFITS tables into typed Python objects
 * Keeps relevant header metadata
 * Provides predictable selection behavior
-
----
 
 ## Object Model
 
