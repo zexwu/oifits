@@ -7,17 +7,16 @@ The library is designed for scientific analysis workflows (not pipeline reductio
 ## Quick Start
 
 ```python
-from astropy.io import fits
-from oifits import OI, GRAVITY_SC
+>>> from astropy.io import fits
+>>> from oifits import OI, GRAVITY_SC
 
-hdul = fits.open("gravity_file.fits")
+>>> hdul = fits.open("gravity_file.fits")
+>>> oi = OI.load(hdul, GRAVITY_SC) # EXTVER
 
-oi = OI.load(hdul, GRAVITY_SC)
+>>> print(oi.t3.t3phi)
+...
 
-print(oi.vis.visamp.shape)
-print(oi.t3.t3phi.shape)
-print(oi.wavelength.eff_wave)
-print(oi.vis)
+>>> print(oi.vis)
 
 OI_VIS(
   extver    = 20,
