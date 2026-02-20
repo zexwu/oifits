@@ -6,10 +6,12 @@ from astropy.io import fits
 
 
 def require_extname(hdul: fits.HDUList, name: str) -> None:
+    target = name.strip().upper()
     for h in hdul:
         ext = (h.header.get("EXTNAME") or h.name or "").strip().upper()
-        if ext == name: return
-    raise TypeError(f"Expected HDU {name}, got {ext}")
+        if ext == target:
+            return
+    raise KeyError(f"Missing HDU EXTNAME={target}")
 
 
 def header_whitelist(hdr: fits.Header, keys: Iterable[str]) -> dict[str, Any]:
