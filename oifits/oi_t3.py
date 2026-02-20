@@ -1,6 +1,4 @@
 from __future__ import annotations
-from typing import Any, Optional
-import numpy as np
 from .base import HDUModel
 
 
@@ -15,22 +13,6 @@ class OI_T3(HDUModel):
         ("T3PHI", True), ("T3PHIERR", True),
         ("T3AMP", False), ("T3AMPERR", False),
     ]
-
-    mjd: np.ndarray
-
-    sta_index: np.ndarray
-    u1coord: np.ndarray
-    v1coord: np.ndarray
-    u2coord: np.ndarray
-    v2coord: np.ndarray
-
-    flag: np.ndarray
-
-    t3phi: np.ndarray
-    t3phierr: np.ndarray
-
-    t3amp: Optional[np.ndarray]
-    t3amperr: Optional[np.ndarray]
 
     def _post_decode(self) -> None:
         return

@@ -19,17 +19,7 @@ class OI_ARRAY(HDUModel):
         ("FOVTYPE", False),
     ]
 
-    frame: Optional[str]  # header keyword usually
-
-    sta_index: np.ndarray
-    sta_name: np.ndarray
-    staxyz: np.ndarray
-
-    tel_name: Optional[np.ndarray]
-    diameter: Optional[np.ndarray]
-
-    fov: Optional[np.ndarray]
-    fovtype: Optional[np.ndarray]
+    frame: Optional[str]
 
     def _post_decode(self) -> None:
         self.frame = self.header.get("FRAME")

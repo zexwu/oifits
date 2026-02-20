@@ -1,6 +1,4 @@
 from __future__ import annotations
-from typing import Optional
-import numpy as np
 
 from .base import HDUModel
 
@@ -13,15 +11,6 @@ class OI_FLUX(HDUModel):
         ("FLAG", True),
         ("FLUX", True), ("FLUXERR", True),
     ]
-
-    mjd: np.ndarray
-
-    sta_index: np.ndarray
-
-    flag: np.ndarray
-    flux: np.ndarray
-    fluxerr: np.ndarray
-
 
     def _post_decode(self) -> None:
         return

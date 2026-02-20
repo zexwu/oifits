@@ -1,6 +1,4 @@
 from __future__ import annotations
-from typing import Optional
-import numpy as np
 
 from .base import HDUModel
 
@@ -16,23 +14,6 @@ class OI_VIS(HDUModel):
         ("VISAMP", True), ("VISAMPERR", True),
         ("VISPHI", False), ("VISPHIERR", False),
     ]
-
-    mjd: np.ndarray
-
-    sta_index: np.ndarray
-    ucoord: np.ndarray
-    vcoord: np.ndarray
-
-    flag: np.ndarray
-
-    visdata: np.ndarray
-    viserr: np.ndarray
-
-    visamp: np.ndarray
-    visamperr: np.ndarray
-
-    visphi: Optional[np.ndarray]
-    visphierr: Optional[np.ndarray]
 
     def _post_decode(self) -> None:
         return
