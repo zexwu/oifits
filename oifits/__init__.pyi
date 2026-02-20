@@ -88,14 +88,3 @@ class OI_WAVELENGTH(HDUModel):
     eff_wave: NDArray[Any]
     eff_band: Optional[NDArray[Any]]
 
-# OI aggregate container
-class OI:
-    array: OI_ARRAY
-    wavelength: OI_WAVELENGTH
-    flux: OI_FLUX
-    vis: OI_VIS
-    t3: OI_T3
-    extver: Any
-    @classmethod
-    def load(cls, hdul: fits.HDUList, extver: Any = ...) -> OI: ...
-

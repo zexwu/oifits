@@ -2,8 +2,6 @@
 from __future__ import annotations
 
 import importlib
-import inspect
-import os
 import pkgutil
 import re
 import sys
@@ -154,26 +152,6 @@ def main() -> None:
                 out_lines.append(f"    {attr}: Optional[NDArray[Any]]")
         out_lines.append("")
 
-    # If there is an OI dataclass, stub it explicitly (matches your oi.py)
-    try:
-        oi_mod = importlib.import_module(f"{pkg_name}.oi")
-        OI = getattr(oi_mod, "OI", None)
-        if inspect.isclass(OI):
-            out_lines.append("# OI aggregate container")
-            out_lines.append("class OI:")
-            out_lines.append("    array: OI_ARRAY")
-            out_lines.append("    wavelength: OI_WAVELENGTH")
-            out_lines.append("    flux: OI_FLUX")
-            out_lines.append("    vis: OI_VIS")
-            out_lines.append("    t3: OI_T3")
-            # keep signature consistent with your current code (extver is passed through)
-            out_lines.append("    extver: Any")
-            out_lines.append("    @classmethod")
-            out_lines.append("    def load(cls, hdul: fits.HDUList, extver: Any = ...) -> OI: ...")
-            out_lines.append("")
-    except Exception:
-        # If oi.py doesn't exist or import fails, just skip
-        pass
 
     stub_path = pkg_dir / "__init__.pyi"
     stub_path.write_text("\n".join(out_lines) + "\n", encoding="utf-8")
