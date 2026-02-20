@@ -37,8 +37,8 @@ OI_VIS(
 ```
 
 The object `oi` now contains a single consistent interferometric dataset, offering convenient access to the data and metadata.
-
-![](./pic.png)
+test
+<!--![](./pic.png)-->
 
 ## What the Library Does
 
