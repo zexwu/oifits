@@ -1,14 +1,8 @@
 # oifits
 
-A minimal Python library for reading OIFITS files with **explicit EXTVER selection semantics**.
+A minimal Python library for reading OIFITS files
 
 The library is designed for scientific analysis workflows (not pipeline reduction) where the user needs a *self-consistent interferometric dataset* extracted from multi-extension OIFITS files — in particular VLTI/GRAVITY data products.
-
-This is **not** a general-purpose OIFITS abstraction layer and intentionally avoids heavy object hierarchies, automatic merging, or implicit data association.
-
-Instead, the core concept is simple:
-
-> An `OI` object represents one selected interferometric dataset defined by a single `EXTVER`.
 
 ## Quick Start
 
@@ -23,6 +17,24 @@ oi = OI.load(hdul, GRAVITY_SC)
 print(oi.vis.visamp.shape)
 print(oi.t3.t3phi.shape)
 print(oi.wavelength.eff_wave)
+print(oi.vis)
+
+OI_VIS(
+  extver    = 20,
+  insname   = 'GRAVITY_FT',
+  arrname   = 'VLTI',
+  mjd       = array(shape=(720,),   dtype='>f8' ),
+  sta_index = array(shape=(720, 2), dtype='>i2' ),
+  ucoord    = array(shape=(720,),   dtype='>f8' ),
+  vcoord    = array(shape=(720,),   dtype='>f8' ),
+  flag      = array(shape=(720, 6), dtype='bool'),
+  visdata   = array(shape=(720, 6), dtype='>c16'),
+  viserr    = array(shape=(720, 6), dtype='>c16'),
+  visamp    = array(shape=(720, 6), dtype='>f8' ),
+  visamperr = array(shape=(720, 6), dtype='>f8' ),
+  visphi    = array(shape=(720, 6), dtype='>f8' ),
+  visphierr = array(shape=(720, 6), dtype='>f8' ),
+)
 ```
 
 The object `oi` now contains a single consistent interferometric dataset.
@@ -32,7 +44,6 @@ The object `oi` now contains a single consistent interferometric dataset.
 ## What the Library Does
 
 * Reads OIFITS tables into typed Python objects
-* Copies FITS columns into numpy arrays
 * Keeps relevant header metadata
 * Provides predictable selection behavior
 
