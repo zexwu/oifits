@@ -19,10 +19,7 @@ class OI_ARRAY(HDUModel):
         ("FOVTYPE", False),
     ]
 
-    frame: Optional[str]
-
     def _post_decode(self) -> None:
-        self.frame = self.header.get("FRAME")
         self.sta_name = np.char.strip(self.sta_name)
         if self.tel_name is not None:
             self.tel_name = np.char.strip(self.tel_name)
