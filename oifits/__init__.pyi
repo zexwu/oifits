@@ -14,6 +14,7 @@ GRAVITY_FT_P2: int
 GRAVITY_SC: int
 GRAVITY_SC_P1: int
 GRAVITY_SC_P2: int
+__version__: str
 
 class HDUModel:
     EXTNAME: ClassVar[str]
@@ -95,7 +96,7 @@ class OI:
     flux: OI_FLUX
     vis: OI_VIS
     t3: OI_T3
-    extver: Any
+    extver: int
     @classmethod
-    def load(cls, hdul: fits.HDUList, extver: Any = ...) -> OI: ...
+    def load(cls, hdul: fits.HDUList, extver: int) -> OI: ...
 

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import ast
 import importlib
 import inspect
 import os
@@ -22,7 +23,9 @@ def _find_package_dir(script_path: Path) -> Path:
     for parent in [p.parent] + list(p.parents):
         if (parent / "__init__.py").exists() and (parent / "base.py").exists():
             return parent
-    raise RuntimeError("Cannot locate package directory (needs __init__.py and base.py).")
+    raise RuntimeError(
+        "Cannot locate package directory (needs __init__.py and base.py)."
+    )
 
 
 def _iter_submodules(pkg_name: str) -> Iterable[str]:
@@ -33,12 +36,14 @@ def _iter_submodules(pkg_name: str) -> Iterable[str]:
         yield m.name
 
 
-def _read_init_exports(init_py: Path) -> tuple[list[str], dict[str, str], dict[str, int]]:
+def _read_init_exports(
+    init_py: Path,
+) -> tuple[list[str], dict[str, str], dict[str, Any]]:
     """
     Parse __init__.py to capture:
       - exported class names (from .module import NAME)
       - name -> module mapping for those exports
-      - integer constants (e.g. GRAVITY_FT = 20)
+      - module-level constants (e.g. GRAVITY_FT = 20, __version__ = "0.1.0")
     """
     text = init_py.read_text(encoding="utf-8")
 
@@ -50,9 +55,24 @@ def _read_init_exports(init_py: Path) -> tuple[list[str], dict[str, str], dict[s
         exports.append(name)
         export_mod[name] = mod
 
-    # GRAVITY_FT = 20
-    const_re = re.compile(r"^\s*([A-Z][A-Z0-9_]*)\s*=\s*(\d+)\s*$", re.M)
-    consts: dict[str, int] = {k: int(v) for k, v in const_re.findall(text)}
+    # Match constant assignments: NAME = value
+    # Exclude lines that start with 'from' or 'import'
+    const_re = re.compile(r"^\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*=\s*(.+)$", re.M)
+    consts: dict[str, Any] = {}
+    for name, rhs in const_re.findall(text):
+        # Skip imports (already captured) and lines that contain 'import' or 'from'
+        if name in exports or rhs.lstrip().startswith(("import", "from")):
+            continue
+        # Skip __all__ which is a list of export names, not a type constant
+        if name == "__all__":
+            continue
+        try:
+            # Evaluate the right-hand side as a Python literal
+            value = ast.literal_eval(rhs.strip())
+            consts[name] = value
+        except (ValueError, SyntaxError):
+            # If not a simple literal, skip (e.g., function calls, expressions)
+            continue
 
     return exports, export_mod, consts
 
@@ -94,7 +114,9 @@ def main() -> None:
     out_lines: list[str] = []
     out_lines.append("from __future__ import annotations")
     out_lines.append("")
-    out_lines.append("from typing import Any, ClassVar, Optional, Sequence, Tuple, Iterable")
+    out_lines.append(
+        "from typing import Any, ClassVar, Optional, Sequence, Tuple, Iterable"
+    )
     out_lines.append("import numpy as np")
     out_lines.append("from numpy.typing import NDArray")
     out_lines.append("from astropy.io import fits")
@@ -116,7 +138,20 @@ def main() -> None:
     if consts:
         out_lines.append("# Constants (from __init__.py)")
         for k in sorted(consts.keys()):
-            out_lines.append(f"{k}: int")
+            v = consts[k]
+            if isinstance(v, int):
+                typ = "int"
+            elif isinstance(v, str):
+                typ = "str"
+            elif isinstance(v, float):
+                typ = "float"
+            elif isinstance(v, bool):
+                typ = "bool"
+            elif v is None:
+                typ = "None"
+            else:
+                typ = "Any"
+            out_lines.append(f"{k}: {typ}")
         out_lines.append("")
 
     # Base class stub
@@ -167,9 +202,11 @@ def main() -> None:
             out_lines.append("    vis: OI_VIS")
             out_lines.append("    t3: OI_T3")
             # keep signature consistent with your current code (extver is passed through)
-            out_lines.append("    extver: Any")
+            out_lines.append("    extver: int")
             out_lines.append("    @classmethod")
-            out_lines.append("    def load(cls, hdul: fits.HDUList, extver: Any = ...) -> OI: ...")
+            out_lines.append(
+                "    def load(cls, hdul: fits.HDUList, extver: int) -> OI: ..."
+            )
             out_lines.append("")
     except Exception:
         # If oi.py doesn't exist or import fails, just skip
