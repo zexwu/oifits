@@ -1,49 +1,44 @@
 from __future__ import annotations
-from .base import HDUModel
+
+import numpy as np
 from numpy.typing import NDArray
 from typing import Optional
-import numpy as np
+
+from .base import HDUModel
 
 
-class OI_VIS(HDUModel):
-    EXTNAME = "OI_VIS"
+class OI_VIS2(HDUModel):
+    EXTNAME = "OI_VIS2"
     COLUMNS = [
         ("TIME", True),
         ("MJD", True),
         ("INT_TIME", True),
-        ("VISAMP", True), ("VISAMPERR", True),
-        ("VISPHI", True), ("VISPHIERR", True),
-        ("UCOORD", True), ("VCOORD", True),
+        ("VIS2DATA", True),
+        ("VIS2ERR", True),
+        ("UCOORD", True),
+        ("VCOORD", True),
         ("STA_INDEX", True),
         ("FLAG", True),
-        ("VISDATA", False), ("VISERR", False),
-        ("CORRINDX_VISAMP", False),
-        ("CORRINDX_VISPHI", False),
+        ("CORRINDX_VIS2DATA", False),
     ]
 
     time: NDArray
     mjd: NDArray
     int_time: NDArray
-    visamp: NDArray
-    visamperr: NDArray
-    visphi: NDArray
-    visphierr: NDArray
+    vis2data: NDArray
+    vis2err: NDArray
     ucoord: NDArray
     vcoord: NDArray
     sta_index: NDArray
     flag: NDArray
 
-    visdata: Optional[NDArray]
-    viserr: Optional[NDArray]
-    corrindx_visamp: Optional[NDArray]
-    corrindx_visphi: Optional[NDArray]
+    corrindx_vis2data: Optional[NDArray]
 
     # Derived shapes
     n_bsl: Optional[int] = None
     n_dit: Optional[int] = None
 
     def _post_decode(self) -> None:
-        # infer number of baselines and dithers (DITs)
         self.n_bsl = len(np.unique(self.sta_index, axis=0))
         self.n_dit = self.mjd.shape[0] // self.n_bsl
         if self.n_bsl * self.n_dit != self.mjd.shape[0]:
@@ -51,23 +46,23 @@ class OI_VIS(HDUModel):
         return
 
     def reshape(self) -> None:
-        """Reshape time-ordered rows into [n_dit, n_bsl, ...] grids."""
+        """Reshape time-ordered rows into [n_dit, n_bl, ...] grids."""
         if self.n_bsl is None or self.n_dit is None:
             raise ValueError("Call after _post_decode; n_bsl/n_dit not set")
 
-        to_reshape = ["time", "mjd", "int_time", "visamp", "visamperr",
-                      "visphi", "visphierr", "ucoord", "vcoord", "flag", "visdata", "viserr"]
+        to_reshape = ["time", "mjd", "int_time", "vis2data", "vis2err",
+                      "ucoord", "vcoord", "flag"]
         for attr in to_reshape:
             attr_value = getattr(self, attr, None)
             if attr_value is None: continue
             if attr_value.shape[0] != self.n_bsl * self.n_dit:
-                raise ValueError(f"Data length of {attr} must be n_bl * n_dit")
+                raise ValueError(f"Data length of {attr} must be n_bsl * n_dit")
             if attr_value.ndim == 1:
                 setattr(self, attr, attr_value.reshape(self.n_dit, self.n_bsl))
             else:
                 setattr(self, attr, attr_value.reshape(self.n_dit, self.n_bsl, -1))
 
-    __doc__ = """Visibility table decoder (``OI_VIS``).
+    __doc__ = """Squared visibility table decoder (``OI_VIS2``).
 
     Fields map directly to OIFITS binary table columns. See class attributes for
     available columns and the instance properties for numpy arrays.

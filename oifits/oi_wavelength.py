@@ -16,3 +16,8 @@ class OI_WAVELENGTH(HDUModel):
 
     def _post_decode(self) -> None:
         return
+
+    __doc__ = """Wavelength table decoder (``OI_WAVELENGTH``).
+
+    Exposes effective wavelength (`eff_wave`) and optional bandpass (`eff_band`).
+    """

@@ -7,18 +7,28 @@ from typing import Optional
 class OI_FLUX(HDUModel):
     EXTNAME = "OI_FLUX"
     COLUMNS = [
-        ("STA_INDEX", True),
         ("MJD", True),
+        ("INT_TIME", True),
+        ("FLUX", False), ("FLUXDATA", False), ("FLUXERR", True),
         ("FLAG", True),
-        ("FLUX", True), ("FLUXERR", True),
+        ("STA_INDEX", False),
+        ("CORRINDX_FLUXDATA", False)
     ]
 
-    sta_index: NDArray
     mjd: NDArray
+    int_time: NDArray
 
-    flag: NDArray
-    flux: NDArray
+    flux: Optional[NDArray]
+    fluxdata: Optional[NDArray]
     fluxerr: NDArray
+    flag: NDArray
+    sta_index: Optional[NDArray]
+    corrindx_fluxdata: Optional[NDArray]
 
     def _post_decode(self) -> None:
         return
+
+    __doc__ = """Flux table decoder (``OI_FLUX``).
+
+    Decodes station-indexed fluxes and errors per channel for a given EXTVER.
+    """

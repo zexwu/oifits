@@ -1,5 +1,6 @@
 from __future__ import annotations
-from typing import Any, ClassVar, Optional, Sequence, Tuple, Iterable
+from typing import Any, ClassVar, Optional, Sequence, Tuple, Iterable, Mapping
+from types import MappingProxyType
 
 import numpy as np
 from astropy.io import fits
@@ -20,15 +21,10 @@ def header_whitelist(hdr: fits.Header, keys: Iterable[str]) -> dict[str, Any]:
 
 
 class HDUModel:
-    """
-    Base class for EXTNAME-named binary table HDUs.
+    """Base class for EXTNAME-named binary table HDUs.
 
-    Subclasses define:
-      EXTNAME: str
-      COLUMNS: list[tuple[colname, required(bool)]]
-
-    It will create attributes with lowercased names:
-      e.g. 'STA_INDEX' -> self.sta_index
+    Subclasses define ``EXTNAME`` and ``COLUMNS`` (name, required) and gain
+    lower-case attributes for each column (e.g. ``STA_INDEX`` -> ``sta_index``).
     """
 
     EXTNAME: ClassVar[str]
@@ -47,7 +43,7 @@ class HDUModel:
         hdul: fits.HDUList,
         extver: Optional[int] = None,
         header_keys: Optional[list[str]] = None,
-    ):
+    ) -> None:
         require_extname(hdul, self.EXTNAME)
 
         if extver is None:
@@ -59,7 +55,7 @@ class HDUModel:
 
         default_keys = ["EXTNAME", "EXTVER", "INSNAME", "ARRNAME", "DATE-OBS", "OBJECT", "FRAME"]
         keys = default_keys if header_keys is None else header_keys
-        self.header = header_whitelist(hdr, keys)
+        self.header = MappingProxyType(header_whitelist(hdr, keys))
 
         self.extver = int(hdr.get("EXTVER", 1))
         self.insname = hdr.get("INSNAME")
@@ -78,8 +74,19 @@ class HDUModel:
         self._post_decode()
 
     def _post_decode(self) -> None:
-        """Subclass hook."""
+        """Subclass hook for value cleanup/validation after decode."""
         return
+
+    # Properties for common metadata; MappingProxyType keeps header read-only.
+    @property
+    def metadata(self) -> Mapping[str, Any]:
+        """Immutable header subset (EXTNAME/EXTVER/INSNAME/ARRNAME etc.)."""
+        return self.header
+
+    @property
+    def extver_id(self) -> Optional[int]:
+        """Alias for ``EXTVER`` header value."""
+        return self.extver
 
 
     def __repr__(self) -> str:
