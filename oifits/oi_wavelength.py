@@ -1,5 +1,7 @@
 from __future__ import annotations
 from .base import HDUModel
+from numpy.typing import NDArray
+from typing import Optional
 
 
 class OI_WAVELENGTH(HDUModel):
@@ -8,6 +10,9 @@ class OI_WAVELENGTH(HDUModel):
         ("EFF_WAVE", True),
         ("EFF_BAND", False),
     ]
+
+    eff_wave: NDArray
+    eff_band: Optional[NDArray]
 
     def _post_decode(self) -> None:
         return

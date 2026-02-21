@@ -1,8 +1,9 @@
 from __future__ import annotations
-from typing import Optional
-import numpy as np
-
 from .base import HDUModel
+from numpy.typing import NDArray
+from typing import Optional
+
+import numpy as np
 
 
 class OI_ARRAY(HDUModel):
@@ -11,13 +12,21 @@ class OI_ARRAY(HDUModel):
         ("STA_INDEX", True),
         ("STA_NAME", True),
         ("STAXYZ", True),
-
         ("TEL_NAME", False),
         ("DIAMETER", False),
-
         ("FOV", False),
         ("FOVTYPE", False),
     ]
+
+    sta_index: NDArray
+    sta_name: NDArray
+    staxyz: NDArray
+
+    tel_name: Optional[NDArray]
+
+    diameter: Optional[NDArray]
+    fov: Optional[NDArray]
+    fovtype: Optional[NDArray]
 
     def _post_decode(self) -> None:
         self.sta_name = np.char.strip(self.sta_name)
