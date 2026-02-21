@@ -1,5 +1,6 @@
 from __future__ import annotations
 from typing import Any, ClassVar, Optional, Sequence, Tuple, Iterable, Mapping
+from collections.abc import Sequence as SeqABC
 from types import MappingProxyType
 
 import numpy as np
@@ -88,7 +89,6 @@ class HDUModel:
         """Alias for ``EXTVER`` header value."""
         return self.extver
 
-
     def __repr__(self) -> str:
         parts: list[str] = []
 
@@ -104,7 +104,7 @@ class HDUModel:
             attr = colname.lower()
             v: Any = getattr(self, attr, None)
             if v is None:
-                parts.append(f"  {attr:10s}= None,")
+                # parts.append(f"  {attr:10s}= None,")
                 continue
 
             a = np.asarray(v)
@@ -120,3 +120,35 @@ class HDUModel:
         parts.append(")")
 
         return "\n".join(parts)
+
+
+class ReshapeMixin:
+    """Shared helper for reshaping time-ordered rows into [outer, inner, ...] grids."""
+
+    def _reshape_fields(
+        self,
+        fields: SeqABC[str],
+        outer: int,
+        inner: int,
+        *,
+        inplace: bool = True,
+    ) -> dict[str, np.ndarray]:
+        result: dict[str, np.ndarray] = {}
+        for name in fields:
+            value = getattr(self, name, None)
+            if value is None: continue
+            arr = np.asarray(value)
+
+            # idempotent: already shaped as (outer, inner, ...)
+            if arr.ndim >= 2 and arr.shape[0] == outer and arr.shape[1] == inner:
+                reshaped = arr
+            else:
+                if arr.shape[0] != outer * inner:
+                    raise ValueError(f"Data length of {name} must be {outer} * {inner}")
+                tail = arr.shape[1:]
+                shape = (outer, inner, *tail) if tail else (outer, inner)
+                reshaped = arr.reshape(shape)
+
+            if inplace: setattr(self, name, reshaped)
+            result[name] = reshaped
+        return result

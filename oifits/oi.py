@@ -42,6 +42,15 @@ class OI:
             wavelength=OI_WAVELENGTH(hdul, extver),
             flux=OI_FLUX(hdul, extver),
             vis=OI_VIS(hdul, extver),
+            vis2=OI_VIS2(hdul, extver),
             t3=OI_T3(hdul, extver),
             extver=extver,
         )
+
+    def reshape(self) -> "OI":
+        """In-place reshape of vis/vis2/t3 tables to [n_dit, n_baseline|n_tri, ...]."""
+        self.flux.reshape()
+        self.vis.reshape()
+        self.vis2.reshape()
+        self.t3.reshape()
+        return self

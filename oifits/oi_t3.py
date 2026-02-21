@@ -1,12 +1,12 @@
 from __future__ import annotations
-from .base import HDUModel
+from .base import HDUModel, ReshapeMixin
 from numpy.typing import NDArray
 from typing import Optional
 
 import numpy as np
 
 
-class OI_T3(HDUModel):
+class OI_T3(HDUModel, ReshapeMixin):
     EXTNAME = "OI_T3"
     COLUMNS = [
         ("MJD", True),
@@ -40,33 +40,22 @@ class OI_T3(HDUModel):
     corrindx_t3phi: Optional[NDArray] = None
 
     # User defined attributes
-    n_tri: Optional[int] = None
-    n_dit: Optional[int] = None
+    n_tri: int = 0
+    n_dit: int = 0
 
     def _post_decode(self) -> None:
-        self.n_tri = len(np.unique(self.sta_index, axis=0))
-        self.n_dit = self.mjd.shape[0] // self.n_tri
-
-        if self.n_tri * self.n_dit != self.mjd.shape[0]:
+        n_tri = len(np.unique(self.sta_index, axis=0))
+        n_dit = self.mjd.shape[0] // n_tri
+        if n_tri * n_dit != self.mjd.shape[0]:
             raise ValueError("Data length must be divisible by n_tri to determine n_dit")
+        self.n_tri = int(n_tri)
+        self.n_dit = int(n_dit)
         return
 
     def reshape(self) -> None:
-        """Reshape time-ordered rows into [n_dit, n_tri, ...] grids."""
-        if self.n_tri is None or self.n_dit is None:
-            raise ValueError("Call after _post_decode; n_tri/n_dit not set")
-
-        to_reshape = ["mjd", "time", "int_time", "t3phi", "t3phierr", "t3amp", "t3amperr",
-                      "u1coord", "v1coord", "u2coord", "v2coord", "flag"]
-        for attr in to_reshape:
-            attr_value = getattr(self, attr, None)
-            if attr_value is None: continue
-            if attr_value.shape[0] != self.n_tri * self.n_dit:
-                raise ValueError(f"Data length of {attr} must be n_tri * n_dit")
-            if attr_value.ndim == 1:
-                setattr(self, attr, attr_value.reshape(self.n_dit, self.n_tri))
-            else:
-                setattr(self, attr, attr_value.reshape(self.n_dit, self.n_tri, -1))
+        """In-place reshape into [n_dit, n_tri, ...] grids."""
+        fields = [i[0].lower() for i in self.COLUMNS]
+        self._reshape_fields(fields, self.n_dit, self.n_tri, inplace=True)
 
     __doc__ = """Triple product table decoder (``OI_T3``).
 

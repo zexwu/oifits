@@ -1,11 +1,11 @@
 from __future__ import annotations
-from .base import HDUModel
+from .base import HDUModel, ReshapeMixin
 from numpy.typing import NDArray
 from typing import Optional
 import numpy as np
 
 
-class OI_VIS(HDUModel):
+class OI_VIS(HDUModel, ReshapeMixin):
     EXTNAME = "OI_VIS"
     COLUMNS = [
         ("TIME", True),
@@ -39,8 +39,8 @@ class OI_VIS(HDUModel):
     corrindx_visphi: Optional[NDArray]
 
     # Derived shapes
-    n_bsl: Optional[int] = None
-    n_dit: Optional[int] = None
+    n_bsl: int = 0
+    n_dit: int = 0
 
     def _post_decode(self) -> None:
         # infer number of baselines and dithers (DITs)
@@ -51,21 +51,9 @@ class OI_VIS(HDUModel):
         return
 
     def reshape(self) -> None:
-        """Reshape time-ordered rows into [n_dit, n_bsl, ...] grids."""
-        if self.n_bsl is None or self.n_dit is None:
-            raise ValueError("Call after _post_decode; n_bsl/n_dit not set")
-
-        to_reshape = ["time", "mjd", "int_time", "visamp", "visamperr",
-                      "visphi", "visphierr", "ucoord", "vcoord", "flag", "visdata", "viserr"]
-        for attr in to_reshape:
-            attr_value = getattr(self, attr, None)
-            if attr_value is None: continue
-            if attr_value.shape[0] != self.n_bsl * self.n_dit:
-                raise ValueError(f"Data length of {attr} must be n_bl * n_dit")
-            if attr_value.ndim == 1:
-                setattr(self, attr, attr_value.reshape(self.n_dit, self.n_bsl))
-            else:
-                setattr(self, attr, attr_value.reshape(self.n_dit, self.n_bsl, -1))
+        """In-place reshape into [n_dit, n_bsl, ...] grids."""
+        fields = [i[0].lower() for i in self.COLUMNS]
+        self._reshape_fields(fields, self.n_dit, self.n_bsl, inplace=True)
 
     __doc__ = """Visibility table decoder (``OI_VIS``).
 
