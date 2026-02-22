@@ -49,6 +49,7 @@ class HDUModel:
         arrname: Optional[str] = None,
         header: Optional[Mapping[str, Any]] = None,
         header_keys: Optional[Sequence[str]] = None,
+        strict: bool = True,
         **attrs: Any,
     ) -> T_HDUModel:
         """Construct an HDUModel instance from already-available column arrays.
@@ -97,10 +98,11 @@ class HDUModel:
         for colname, required in cls.COLUMNS:
             attr = colname.lower()
             value = attrs.get(colname, attrs_lc.get(attr))
-            if value is None and required:
-                raise KeyError(f"Missing column {colname} for {cls.EXTNAME}")
+            if value is None:
+                if required and strict:
+                    raise KeyError(f"Missing column {colname} for {cls.EXTNAME}")
             else:
-                setattr(obj, attr, np.asarray(value))
+                setattr(obj, attr, value)
 
         obj._post_decode()
         return obj
@@ -111,6 +113,7 @@ class HDUModel:
         hdul: fits.HDUList,
         extver: Optional[int] = None,
         header_keys: Optional[list[str]] = None,
+        strict: bool = True,
     ) -> None:
         require_extname(hdul, self.EXTNAME)
 
@@ -133,8 +136,8 @@ class HDUModel:
         for colname, required in self.COLUMNS:
             attr = colname.lower()
             if colname in data.names:
-                setattr(self, attr, np.asarray(data[colname]))
-            elif required:
+                setattr(self, attr, data[colname])
+            elif required and strict:
                 raise KeyError(f"Missing column {colname} in {self.EXTNAME}")
             else:
                 setattr(self, attr, None)
@@ -192,6 +195,7 @@ class HDUModel:
         extver: Optional[int] = None,
         header_overrides: Optional[Mapping[str, Any]] = None,
         flatten: bool = True,
+        strict: bool = True,
     ) -> fits.BinTableHDU:
         """Encode this model back into a FITS BinTableHDU.
 
@@ -212,7 +216,7 @@ class HDUModel:
             attr = colname.lower()
             value: Any = getattr(self, attr, None)
             if value is None:
-                if required:
+                if required and strict:
                     raise KeyError(f"Missing value for required column {colname} in {self.EXTNAME}")
                 continue
 
