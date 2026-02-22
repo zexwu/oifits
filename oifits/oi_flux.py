@@ -43,6 +43,11 @@ class OI_FLUX(HDUModel, ReshapeMixin):
         fields = [i[0].lower() for i in self.COLUMNS]
         self._reshape_fields(fields, self.n_dit, self.n_tel, inplace=True)
 
+    def flatten(self, *, inplace: bool = True) -> dict[str, np.ndarray]:
+        """Flatten reshaped fields back into row-major (nrow, ...) arrays."""
+        fields = [i[0].lower() for i in self.COLUMNS]
+        return self._flatten_fields(fields, self.n_dit, self.n_tel, inplace=inplace)
+
 
     __doc__ = """Flux table decoder (``OI_FLUX``).
 

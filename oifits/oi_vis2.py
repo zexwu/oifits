@@ -50,6 +50,11 @@ class OI_VIS2(HDUModel, ReshapeMixin):
         fields = [i[0].lower() for i in self.COLUMNS]
         self._reshape_fields(fields, self.n_dit, self.n_bsl, inplace=True)
 
+    def flatten(self, *, inplace: bool = True) -> dict[str, np.ndarray]:
+        """Flatten reshaped fields back into row-major (nrow, ...) arrays."""
+        fields = [i[0].lower() for i in self.COLUMNS]
+        return self._flatten_fields(fields, self.n_dit, self.n_bsl, inplace=inplace)
+
     __doc__ = """Squared visibility table decoder (``OI_VIS2``).
 
     Fields map directly to OIFITS binary table columns. See class attributes for

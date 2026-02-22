@@ -50,10 +50,15 @@ class OI_VIS(HDUModel, ReshapeMixin):
             raise ValueError("Data length must be divisible by n_bsl to determine n_dit")
         return
 
-    def reshape(self) -> None:
+    def reshape(self, *, inplace: bool = True) -> None:
         """In-place reshape into [n_dit, n_bsl, ...] grids."""
         fields = [i[0].lower() for i in self.COLUMNS]
-        self._reshape_fields(fields, self.n_dit, self.n_bsl, inplace=True)
+        self._reshape_fields(fields, self.n_dit, self.n_bsl, inplace=inplace)
+
+    def flatten(self, *, inplace: bool = True) -> dict[str, np.ndarray]:
+        """Flatten reshaped fields back into row-major (nrow, ...) arrays."""
+        fields = [i[0].lower() for i in self.COLUMNS]
+        return self._flatten_fields(fields, self.n_dit, self.n_bsl, inplace=inplace)
 
     __doc__ = """Visibility table decoder (``OI_VIS``).
 

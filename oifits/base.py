@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Any, ClassVar, Optional, Sequence, Tuple, Iterable, Mapping
+from typing import Any, ClassVar, Optional, Sequence, Tuple, Iterable, Mapping, TypeVar
 from collections.abc import Sequence as SeqABC
 from types import MappingProxyType
 
@@ -20,6 +20,8 @@ def header_whitelist(hdr: fits.Header, keys: Iterable[str]) -> dict[str, Any]:
     KU = {k.upper() for k in keys}
     return {k: hdr.get(k) for k in hdr.keys() if k.upper() in KU}
 
+T_HDUModel = TypeVar("T_HDUModel", bound="HDUModel")
+
 
 class HDUModel:
     """Base class for EXTNAME-named binary table HDUs.
@@ -37,6 +39,71 @@ class HDUModel:
     extver: Optional[int]
     insname: Optional[str]
     arrname: Optional[str]
+
+    @classmethod
+    def from_attrs(
+        cls: type[T_HDUModel],
+        *,
+        extver: int = 1,
+        insname: Optional[str] = None,
+        arrname: Optional[str] = None,
+        header: Optional[Mapping[str, Any]] = None,
+        header_keys: Optional[Sequence[str]] = None,
+        **attrs: Any,
+    ) -> T_HDUModel:
+        """Construct an HDUModel instance from already-available column arrays.
+
+        This bypasses FITS decoding and is useful for creating derived products.
+
+        Parameters
+        ----------
+        extver, insname, arrname :
+            Common OIFITS header identifiers.
+        header :
+            Optional mapping used to populate ``metadata`` (a whitelisted subset
+            of keys, unless ``header_keys`` is provided).
+        header_keys :
+            Keys to keep from ``header`` for ``metadata``. Defaults to the same
+            set used by FITS decoding.
+        **attrs :
+            Column arrays keyed by either lower-case attribute names
+            (e.g. ``visamp``) or FITS column names (e.g. ``VISAMP``).
+        """
+
+        obj = cls.__new__(cls)
+
+        default_keys = ["EXTNAME", "EXTVER", "INSNAME", "ARRNAME", "DATE-OBS", "OBJECT", "FRAME"]
+        keys = default_keys if header_keys is None else list(header_keys)
+
+        src = {} if header is None else dict(header)
+        src_upper = {str(k).upper(): v for k, v in src.items()}
+        meta: dict[str, Any] = {k.upper(): src_upper.get(k.upper()) for k in keys}
+
+        meta["EXTNAME"] = cls.EXTNAME
+        meta["EXTVER"] = int(extver)
+        if insname is not None:
+            meta["INSNAME"] = insname
+        if arrname is not None:
+            meta["ARRNAME"] = arrname
+
+        obj.header = MappingProxyType(meta)
+        obj.extver = int(extver)
+        obj.insname = insname
+        obj.arrname = arrname
+
+        # Normalize provided attributes to allow both VISAMP and visamp keys.
+        attrs_lc = {str(k).lower(): v for k, v in attrs.items()}
+
+        for colname, required in cls.COLUMNS:
+            attr = colname.lower()
+            value = attrs.get(colname, attrs_lc.get(attr))
+            if value is None and required:
+                raise KeyError(f"Missing column {colname} for {cls.EXTNAME}")
+            else:
+                setattr(obj, attr, np.asarray(value))
+
+        obj._post_decode()
+        return obj
 
 
     def __init__(
@@ -103,9 +170,7 @@ class HDUModel:
         for colname, _required in self.COLUMNS:
             attr = colname.lower()
             v: Any = getattr(self, attr, None)
-            if v is None:
-                # parts.append(f"  {attr:10s}= None,")
-                continue
+            if v is None: continue
 
             a = np.asarray(v)
             # if a.dtype.kind in ("U", "S", "O") and a.ndim == 1 and a.size <= 8:
@@ -120,6 +185,89 @@ class HDUModel:
         parts.append(")")
 
         return "\n".join(parts)
+
+    def to_hdu(
+        self,
+        *,
+        extver: Optional[int] = None,
+        header_overrides: Optional[Mapping[str, Any]] = None,
+        flatten: bool = True,
+    ) -> fits.BinTableHDU:
+        """Encode this model back into a FITS BinTableHDU.
+
+        Notes
+        -----
+        - This is a best-effort encoder intended for writing derived products.
+        - If ``flatten`` is True and this instance mixes in ``ReshapeMixin``,
+          the returned HDU uses row-major shapes (nrow, ...) even if the object
+          has been reshaped to (n_dit, n_bsl|n_tri|n_tel, ...).
+        """
+
+        flattened: dict[str, np.ndarray] = {}
+        if flatten and isinstance(self, ReshapeMixin):
+            flattened = self.flatten(inplace=False)
+
+        arrays: dict[str, np.ndarray] = {}
+        for colname, required in self.COLUMNS:
+            attr = colname.lower()
+            value: Any = getattr(self, attr, None)
+            if value is None:
+                if required:
+                    raise KeyError(f"Missing value for required column {colname} in {self.EXTNAME}")
+                continue
+
+            if flattened and attr in flattened:
+                arr = np.asarray(flattened[attr])
+            else:
+                arr = np.asarray(value)
+            arrays[colname] = arr
+
+        if not arrays:
+            raise ValueError(f"No columns available to encode for {self.EXTNAME}")
+
+        nrow: Optional[int] = None
+        for colname, arr in arrays.items():
+            if arr.ndim < 1:
+                raise ValueError(f"Column {colname} must have at least 1 dimension (rows)")
+            if nrow is None:
+                nrow = int(arr.shape[0])
+            elif int(arr.shape[0]) != nrow:
+                raise ValueError(f"Column {colname} has {arr.shape[0]} rows, expected {nrow}")
+        assert nrow is not None
+
+        dtype_fields: list[tuple[Any, ...]] = []
+        for colname, arr in arrays.items():
+            if arr.ndim == 1:
+                dtype_fields.append((colname, arr.dtype))
+            else:
+                dtype_fields.append((colname, arr.dtype, arr.shape[1:]))
+
+        rec = np.empty(nrow, dtype=np.dtype(dtype_fields))
+        for colname, arr in arrays.items():
+            rec[colname] = arr
+
+        hdr = fits.Header()
+        # Start from the decoded (whitelisted) header subset, then normalize required keys.
+        for k, v in self.header.items():
+            if v is None:
+                continue
+            hdr[k] = v
+
+        hdr["EXTNAME"] = self.EXTNAME
+        hdr["EXTVER"] = int(extver if extver is not None else (self.extver or 1))
+        if self.insname is not None:
+            hdr["INSNAME"] = self.insname
+        if self.arrname is not None:
+            hdr["ARRNAME"] = self.arrname
+
+        if header_overrides:
+            for k, v in header_overrides.items():
+                if v is None:
+                    hdr.remove(k, ignore_missing=True)
+                else:
+                    hdr[k] = v
+
+        return fits.BinTableHDU(data=rec, header=hdr)
 
 
 class ReshapeMixin:
@@ -151,4 +299,31 @@ class ReshapeMixin:
 
             if inplace: setattr(self, name, reshaped)
             result[name] = reshaped
+        return result
+
+    def _flatten_fields(
+        self,
+        fields: SeqABC[str],
+        outer: int,
+        inner: int,
+        *,
+        inplace: bool = True,
+    ) -> dict[str, np.ndarray]:
+        """Inverse of ``_reshape_fields`` for values shaped as (outer, inner, ...)."""
+        result: dict[str, np.ndarray] = {}
+        for name in fields:
+            value = getattr(self, name, None)
+            if value is None: continue
+            arr = np.asarray(value)
+
+            # idempotent: already flat as (outer*inner, ...)
+            if arr.ndim >= 2 and arr.shape[0] == outer and arr.shape[1] == inner:
+                tail = arr.shape[2:]
+                shape = (outer * inner, *tail) if tail else (outer * inner,)
+                flattened = arr.reshape(shape)
+            else:
+                flattened = arr
+
+            if inplace: setattr(self, name, flattened)
+            result[name] = flattened
         return result
