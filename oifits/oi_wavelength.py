@@ -14,7 +14,11 @@ class OI_WAVELENGTH(HDUModel):
     eff_wave: NDArray
     eff_band: Optional[NDArray]
 
+    n_wave: int = 0
+
     def _post_decode(self) -> None:
+        self.n_wave = self.eff_wave.shape[0]
+
         return
 
     __doc__ = """Wavelength table decoder (``OI_WAVELENGTH``).

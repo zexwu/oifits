@@ -11,14 +11,15 @@ class OI_VIS(HDUModel, ReshapeMixin):
         ("TIME", True),
         ("MJD", True),
         ("INT_TIME", True),
-        ("VISAMP", True), ("VISAMPERR", True),
-        ("VISPHI", True), ("VISPHIERR", True),
+        ("VISAMP", False), ("VISAMPERR", False),
+        ("VISPHI", False), ("VISPHIERR", False),
         ("UCOORD", True), ("VCOORD", True),
         ("STA_INDEX", True),
         ("FLAG", True),
         ("VISDATA", False), ("VISERR", False),
         ("CORRINDX_VISAMP", False),
         ("CORRINDX_VISPHI", False),
+        ("GDELAY", False)
     ]
 
     time: NDArray
@@ -37,6 +38,7 @@ class OI_VIS(HDUModel, ReshapeMixin):
     viserr: Optional[NDArray]
     corrindx_visamp: Optional[NDArray]
     corrindx_visphi: Optional[NDArray]
+    gdelay: Optional[NDArray] = None
 
     # Derived shapes
     n_bsl: int = 0
