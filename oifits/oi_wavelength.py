@@ -18,6 +18,7 @@ class OI_WAVELENGTH(HDUModel):
 
     def _post_decode(self) -> None:
         self.n_wave = self.eff_wave.shape[0]
+        self.eff_wave = self.eff_wave.astype(float)
 
         return
 

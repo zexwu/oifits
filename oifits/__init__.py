@@ -5,6 +5,8 @@ from .oi_wavelength import OI_WAVELENGTH
 from .oi_t3 import OI_T3
 from .oi_flux import OI_FLUX
 from .oi import OI
+from . import utils
+
 
 __version__ = "0.1.1"
 

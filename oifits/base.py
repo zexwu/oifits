@@ -136,7 +136,10 @@ class HDUModel:
         for colname, required in self.COLUMNS:
             attr = colname.lower()
             if colname in data.names:
-                setattr(self, attr, data[colname])
+                arr = np.asarray(data[colname])
+                if not arr.dtype.isnative:
+                    arr = arr.astype(arr.dtype.newbyteorder("=")) # byteswap to native endianness
+                setattr(self, attr, arr)
             elif required and strict:
                 raise KeyError(f"Missing column {colname} in {self.EXTNAME}")
             else:
