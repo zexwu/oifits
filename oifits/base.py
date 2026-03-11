@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import Any, ClassVar, Optional, Sequence, Tuple, Iterable, Mapping, TypeVar
 from collections.abc import Sequence as SeqABC
-from types import MappingProxyType
+# from types import MappingProxyType
 
 import numpy as np
 from astropy.io import fits
@@ -87,7 +87,7 @@ class HDUModel:
         if arrname is not None:
             meta["ARRNAME"] = arrname
 
-        obj.header = MappingProxyType(meta)
+        obj.header = meta
         obj.extver = int(extver)
         obj.insname = insname
         obj.arrname = arrname
@@ -126,7 +126,7 @@ class HDUModel:
 
         default_keys = ["EXTNAME", "EXTVER", "INSNAME", "ARRNAME", "DATE-OBS", "OBJECT", "FRAME"]
         keys = default_keys if header_keys is None else header_keys
-        self.header = MappingProxyType(header_whitelist(hdr, keys))
+        self.header = header_whitelist(hdr, keys)
 
         self.extver = int(hdr.get("EXTVER", 1))
         self.insname = hdr.get("INSNAME")
