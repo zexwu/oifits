@@ -17,13 +17,13 @@ def _phasor(ucoord: NDArray, vcoord: NDArray, eff_wave: NDArray, dra: float, dde
     phi = phi[..., None] / eff_wave
     return np.exp(1j * phi)
 
+
 def binary_visibility(oi_wave: OI_WAVELENGTH, oi_vis: OI_VIS|OI_VIS2, par: List) -> NDArray:
     dra, ddec, eta = par
 
     phasor = _phasor(oi_vis.ucoord, oi_vis.vcoord, oi_wave.eff_wave, dra, ddec)
     V = (1 + eta * phasor) / (1 + eta)
     return V
-
 
 
 def binary_bispectrum(oi_wave: OI_WAVELENGTH, oi_t3: OI_T3, par: List) -> NDArray:
@@ -44,7 +44,8 @@ def binary_bispectrum(oi_wave: OI_WAVELENGTH, oi_t3: OI_T3, par: List) -> NDArra
 def compute_gdelay(
     visdata: np.ndarray,
     wl: np.ndarray,
-    search_range: Tuple[float, float] = (-30, 30),
+    search_range: Tuple[float, float] = (-100, 100),
+    search_step: float = 0.1,
     n_newton: int = 5,
 ) -> np.ndarray:
     """
@@ -64,7 +65,7 @@ def compute_gdelay(
     w = -2 * np.pi / wl
 
     # Initial grid search
-    gd_grid = np.arange(search_range[0], search_range[1], 0.1)
+    gd_grid = np.arange(search_range[0], search_range[1], search_step)
     phasors_grid = np.exp(gd_grid[:, None] * k[None, :])
     coherence = np.abs(np.tensordot(visdata, phasors_grid, axes=([-1], [-1])))
 

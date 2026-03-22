@@ -19,7 +19,8 @@ class OI_VIS(HDUModel, ReshapeMixin):
         ("VISDATA", False), ("VISERR", False),
         ("CORRINDX_VISAMP", False),
         ("CORRINDX_VISPHI", False),
-        ("GDELAY", False)
+        ("GDELAY", False),
+        ("GDELAY_FT", False)
     ]
 
     time: NDArray
@@ -39,6 +40,7 @@ class OI_VIS(HDUModel, ReshapeMixin):
     corrindx_visamp: Optional[NDArray]
     corrindx_visphi: Optional[NDArray]
     gdelay: Optional[NDArray] = None
+    gdelay_ft: Optional[NDArray] = None
 
     # Derived shapes
     n_bsl: int = 0
@@ -50,6 +52,8 @@ class OI_VIS(HDUModel, ReshapeMixin):
         self.n_dit = self.mjd.shape[0] // self.n_bsl
         if self.n_bsl * self.n_dit != self.mjd.shape[0]:
             raise ValueError("Data length must be divisible by n_bsl to determine n_dit")
+        self.ucoord = self.ucoord.astype(np.float64)
+        self.vcoord = self.vcoord.astype(np.float64)
         return
 
     def reshape(self, *, inplace: bool = True) -> None:
