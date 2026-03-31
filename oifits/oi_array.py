@@ -5,6 +5,28 @@ from typing import Iterable, Optional
 
 import numpy as np
 
+TRI2BSL = np.array(
+    [
+        [1, -1, 0, 1, 0, 0],
+        [1, 0, -1, 0, 1, 0],
+        [0, 1, -1, 0, 0, 1],
+        [0, 0, 0, 1, -1, 1],
+    ]
+)
+
+
+BSL2TEL = np.array(
+    [
+        [1, -1, 0, 0],
+        [1, 0, -1, 0],
+        [1, 0, 0, -1],
+        [0, 1, -1, 0],
+        [0, 1, 0, -1],
+        [0, 0, 1, -1],
+    ]
+)
+
+
 
 class OI_ARRAY(HDUModel):
     EXTNAME = "OI_ARRAY"

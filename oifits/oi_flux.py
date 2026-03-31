@@ -50,6 +50,12 @@ class OI_FLUX(HDUModel, ReshapeMixin):
         self._flatten_fields(fields, self.n_dit, self.n_tel, inplace=inplace)
         return self
 
+    def __getitem__(self, item) -> Self:
+        fields = [i[0].lower() for i in self.COLUMNS]
+        for field in fields:
+            if getattr(self, field) is not None:
+                setattr(self, field, getattr(self, field)[item])
+        return self
 
     __doc__ = """Flux table decoder (``OI_FLUX``).
 

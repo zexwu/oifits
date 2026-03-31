@@ -64,6 +64,13 @@ class OI_T3(HDUModel, ReshapeMixin):
         self._flatten_fields(fields, self.n_dit, self.n_tri, inplace=inplace)
         return self
 
+    def __getitem__(self, item) -> Self:
+        fields = [i[0].lower() for i in self.COLUMNS]
+        for field in fields:
+            if getattr(self, field) is not None:
+                setattr(self, field, getattr(self, field)[item])
+        return self
+
     __doc__ = """Triple product table decoder (``OI_T3``).
 
     Provides closure phase (`t3phi`) and amplitude (`t3amp`) data with

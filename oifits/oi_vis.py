@@ -19,12 +19,14 @@ class OI_VIS(HDUModel, ReshapeMixin):
         ("VISDATA", False), ("VISERR", False),
         ("CORRINDX_VISAMP", False),
         ("CORRINDX_VISPHI", False),
-        ("V_FACTOR", False),
-        ("GDELAY", False),
-        ("GDELAY_BOOT", False),
-        ("GDELAY_FT", False),
-        ("FIRST_FT", False), ("LAST_FT", False),
-        ("FIRST_MET", False), ("LAST_MET", False)
+
+        # ("V_FACTOR", False),
+        # ("GDELAY", False),
+        # ("GDELAY_BOOT", False),
+        # ("GDELAY_FT", False),
+        # ("FIRST_FT", False), ("LAST_FT", False),
+        # ("FIRST_MET", False), ("LAST_MET", False)
+
     ]
 
     time: NDArray
@@ -43,14 +45,15 @@ class OI_VIS(HDUModel, ReshapeMixin):
     viserr: Optional[NDArray]
     corrindx_visamp: Optional[NDArray]
     corrindx_visphi: Optional[NDArray]
-    v_factor: Optional[NDArray]
-    gdelay: Optional[NDArray] = None
-    gdelay_boot: Optional[NDArray] = None
-    gdelay_ft: Optional[NDArray] = None
-    first_ft: Optional[NDArray] = None
-    last_ft: Optional[NDArray] = None
-    first_met: Optional[NDArray] = None
-    last_met: Optional[NDArray] = None
+
+    # v_factor: Optional[NDArray]
+    # gdelay: Optional[NDArray] = None
+    # gdelay_boot: Optional[NDArray] = None
+    # gdelay_ft: Optional[NDArray] = None
+    # first_ft: Optional[NDArray] = None
+    # last_ft: Optional[NDArray] = None
+    # first_met: Optional[NDArray] = None
+    # last_met: Optional[NDArray] = None
 
     # Derived shapes
     n_bsl: int = 0
@@ -77,6 +80,14 @@ class OI_VIS(HDUModel, ReshapeMixin):
         fields = [i[0].lower() for i in self.COLUMNS]
         self._flatten_fields(fields, self.n_dit, self.n_bsl, inplace=inplace)
         return self
+
+    def __getitem__(self, item) -> Self:
+        fields = [i[0].lower() for i in self.COLUMNS]
+        for field in fields:
+            if getattr(self, field) is not None:
+                setattr(self, field, getattr(self, field)[item])
+        return self
+
 
     __doc__ = """Visibility table decoder (``OI_VIS``).
 

@@ -1,4 +1,4 @@
-from .oi_array import OI_ARRAY
+from .oi_array import OI_ARRAY, BSL2TEL, TRI2BSL
 from .oi_vis import OI_VIS
 from .oi_vis2 import OI_VIS2
 from .oi_wavelength import OI_WAVELENGTH

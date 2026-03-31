@@ -1,7 +1,6 @@
 from __future__ import annotations
-from typing import Any, ClassVar, Optional, Sequence, Tuple, Iterable, Mapping, TypeVar
+from typing import Any, ClassVar, Optional, Sequence, Tuple, Iterable, Mapping, TypeVar, Self
 from collections.abc import Sequence as SeqABC
-# from types import MappingProxyType
 
 import numpy as np
 from astropy.io import fits
