@@ -4,10 +4,7 @@ import numpy as np
 from numpy.typing import NDArray
 from numba import njit
 
-from .oi_t3 import OI_T3
-from .oi_vis import OI_VIS
-from .oi_vis2 import OI_VIS2
-from .oi_wavelength import OI_WAVELENGTH
+from . import OI_T3, OI_VIS, OI_VIS2, OI_WAVELENGTH
 
 MAS2RAD = np.pi / (180 * 3600 * 1000)
 
