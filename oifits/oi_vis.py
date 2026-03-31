@@ -1,7 +1,7 @@
 from __future__ import annotations
 from .base import HDUModel, ReshapeMixin
 from numpy.typing import NDArray
-from typing import Optional
+from typing import Optional, Self
 import numpy as np
 
 
@@ -66,15 +66,17 @@ class OI_VIS(HDUModel, ReshapeMixin):
         self.vcoord = self.vcoord.astype(np.float64)
         return
 
-    def reshape(self, *, inplace: bool = True) -> None:
+    def reshape(self, *, inplace: bool = True) -> Self:
         """In-place reshape into [n_dit, n_bsl, ...] grids."""
         fields = [i[0].lower() for i in self.COLUMNS]
         self._reshape_fields(fields, self.n_dit, self.n_bsl, inplace=inplace)
+        return self
 
-    def flatten(self, *, inplace: bool = True) -> dict[str, np.ndarray]:
+    def flatten(self, *, inplace: bool = True) -> Self:
         """Flatten reshaped fields back into row-major (nrow, ...) arrays."""
         fields = [i[0].lower() for i in self.COLUMNS]
-        return self._flatten_fields(fields, self.n_dit, self.n_bsl, inplace=inplace)
+        self._flatten_fields(fields, self.n_dit, self.n_bsl, inplace=inplace)
+        return self
 
     __doc__ = """Visibility table decoder (``OI_VIS``).
 

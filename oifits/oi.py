@@ -1,5 +1,7 @@
 from __future__ import annotations
+
 from dataclasses import dataclass
+
 from astropy.io.fits import HDUList
 
 from .oi_array import OI_ARRAY
@@ -49,8 +51,8 @@ class OI:
 
     def reshape(self) -> "OI":
         """In-place reshape of vis/vis2/t3 tables to [n_dit, n_baseline|n_tri, ...]."""
-        self.flux.reshape()
-        self.vis.reshape()
-        self.vis2.reshape()
-        self.t3.reshape()
+        self.flux = self.flux.reshape()
+        self.vis = self.vis.reshape()
+        self.vis2 = self.vis2.reshape()
+        self.t3 = self.t3.reshape()
         return self

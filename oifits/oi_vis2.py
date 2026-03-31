@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import numpy as np
 from numpy.typing import NDArray
-from typing import Optional
+from typing import Optional, Self
 
 from .base import HDUModel, ReshapeMixin
 
@@ -45,15 +45,17 @@ class OI_VIS2(HDUModel, ReshapeMixin):
             raise ValueError("Data length must be divisible by n_bsl to determine n_dit")
         return
 
-    def reshape(self) -> None:
+    def reshape(self, *, inplace: bool = True) -> Self:
         """In-place reshape into [n_dit, n_bsl, ...] grids."""
         fields = [i[0].lower() for i in self.COLUMNS]
-        self._reshape_fields(fields, self.n_dit, self.n_bsl, inplace=True)
+        self._reshape_fields(fields, self.n_dit, self.n_bsl, inplace=inplace)
+        return self
 
-    def flatten(self, *, inplace: bool = True) -> dict[str, np.ndarray]:
+    def flatten(self, *, inplace: bool = True) -> Self:
         """Flatten reshaped fields back into row-major (nrow, ...) arrays."""
         fields = [i[0].lower() for i in self.COLUMNS]
-        return self._flatten_fields(fields, self.n_dit, self.n_bsl, inplace=inplace)
+        self._flatten_fields(fields, self.n_dit, self.n_bsl, inplace=inplace)
+        return self
 
     __doc__ = """Squared visibility table decoder (``OI_VIS2``).
 

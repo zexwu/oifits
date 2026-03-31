@@ -1,7 +1,7 @@
 from __future__ import annotations
 from .base import HDUModel, ReshapeMixin
 from numpy.typing import NDArray
-from typing import Optional
+from typing import Optional, Self
 
 import numpy as np
 
@@ -52,15 +52,17 @@ class OI_T3(HDUModel, ReshapeMixin):
         self.n_dit = int(n_dit)
         return
 
-    def reshape(self) -> None:
+    def reshape(self, *, inplace: bool = True) -> Self:
         """In-place reshape into [n_dit, n_tri, ...] grids."""
         fields = [i[0].lower() for i in self.COLUMNS]
-        self._reshape_fields(fields, self.n_dit, self.n_tri, inplace=True)
+        self._reshape_fields(fields, self.n_dit, self.n_tri, inplace=inplace)
+        return self
 
-    def flatten(self, *, inplace: bool = True) -> dict[str, np.ndarray]:
+    def flatten(self, *, inplace: bool = True) -> Self:
         """Flatten reshaped fields back into row-major (nrow, ...) arrays."""
         fields = [i[0].lower() for i in self.COLUMNS]
-        return self._flatten_fields(fields, self.n_dit, self.n_tri, inplace=inplace)
+        self._flatten_fields(fields, self.n_dit, self.n_tri, inplace=inplace)
+        return self
 
     __doc__ = """Triple product table decoder (``OI_T3``).
 
