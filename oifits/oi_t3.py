@@ -16,6 +16,7 @@ class OI_T3(HDUModel, ReshapeMixin):
         ("T3PHI", True), ("T3PHIERR", True),
         ("U1COORD", True), ("V1COORD", True),
         ("U2COORD", True), ("V2COORD", True),
+        ("U3COORD", False), ("V3COORD", False),
         ("STA_INDEX", True),
         ("FLAG", True),
         ("CORRINDX_T3AMP", False),
@@ -38,6 +39,8 @@ class OI_T3(HDUModel, ReshapeMixin):
 
     corrindx_t3amp: Optional[NDArray] = None
     corrindx_t3phi: Optional[NDArray] = None
+    u3coord: Optional[NDArray] = None
+    v3coord: Optional[NDArray] = None
 
     # User defined attributes
     n_tri: int = 0
@@ -50,6 +53,8 @@ class OI_T3(HDUModel, ReshapeMixin):
             raise ValueError("Data length must be divisible by n_tri to determine n_dit")
         self.n_tri = int(n_tri)
         self.n_dit = int(n_dit)
+        self.u3coord = -(self.u1coord + self.u2coord)
+        self.v3coord = -(self.v1coord + self.v2coord)
         return
 
     def reshape(self, *, inplace: bool = True) -> Self:

@@ -20,13 +20,13 @@ class OI_VIS(HDUModel, ReshapeMixin):
         ("CORRINDX_VISAMP", False),
         ("CORRINDX_VISPHI", False),
 
+        # ("F1F2", False),
         # ("V_FACTOR", False),
         # ("GDELAY", False),
         # ("GDELAY_BOOT", False),
         # ("GDELAY_FT", False),
         # ("FIRST_FT", False), ("LAST_FT", False),
         # ("FIRST_MET", False), ("LAST_MET", False)
-
     ]
 
     time: NDArray
@@ -46,7 +46,8 @@ class OI_VIS(HDUModel, ReshapeMixin):
     corrindx_visamp: Optional[NDArray]
     corrindx_visphi: Optional[NDArray]
 
-    # v_factor: Optional[NDArray]
+    # f1f2: Optional[NDArray] = None
+    # v_factor: Optional[NDArray] = None
     # gdelay: Optional[NDArray] = None
     # gdelay_boot: Optional[NDArray] = None
     # gdelay_ft: Optional[NDArray] = None
