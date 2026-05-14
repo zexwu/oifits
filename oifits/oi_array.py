@@ -1,7 +1,8 @@
 from __future__ import annotations
+from collections.abc import Iterable
+
 from .base import HDUModel
 from numpy.typing import NDArray
-from typing import Iterable, Optional
 
 import numpy as np
 
@@ -27,8 +28,6 @@ BSL2TEL = np.array(
 )
 
 
-
-
 class OI_ARRAY(HDUModel):
     EXTNAME = "OI_ARRAY"
     COLUMNS = [
@@ -47,8 +46,8 @@ class OI_ARRAY(HDUModel):
     diameter: NDArray
     staxyz: NDArray
 
-    fov: Optional[NDArray]
-    fovtype: Optional[NDArray]
+    fov: NDArray | None
+    fovtype: NDArray | None
 
     def _post_decode(self) -> None:
         # normalize to native Python strings so lookups accept str keys
@@ -63,7 +62,7 @@ class OI_ARRAY(HDUModel):
     def idx_to_tel(self, sta_index: int) -> str:
         return self._idx_to_tel[sta_index]
 
-    def idx_to_name(self, idx: Iterable)-> str:
+    def idx_to_name(self, idx: Iterable) -> str:
         return "".join(list(map(self.idx_to_tel, idx)))
 
     __doc__ = """Array geometry table decoder (``OI_ARRAY``).

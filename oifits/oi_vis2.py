@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import numpy as np
 from numpy.typing import NDArray
-from typing import Optional, Self
+from typing import Self
 
 from .base import HDUModel, ReshapeMixin
 
@@ -32,7 +32,7 @@ class OI_VIS2(HDUModel, ReshapeMixin):
     sta_index: NDArray
     flag: NDArray
 
-    corrindx_vis2data: Optional[NDArray]
+    corrindx_vis2data: NDArray | None
 
     # Derived shapes
     n_bsl: int = 0
@@ -42,7 +42,9 @@ class OI_VIS2(HDUModel, ReshapeMixin):
         self.n_bsl = len(np.unique(self.sta_index, axis=0))
         self.n_dit = self.mjd.shape[0] // self.n_bsl
         if self.n_bsl * self.n_dit != self.mjd.shape[0]:
-            raise ValueError("Data length must be divisible by n_bsl to determine n_dit")
+            raise ValueError(
+                "Data length must be divisible by n_bsl to determine n_dit"
+            )
         return
 
     def reshape(self, *, inplace: bool = True) -> Self:

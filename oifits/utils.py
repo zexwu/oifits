@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from collections.abc import Sequence
 
 import numpy as np
 from numpy.typing import NDArray
@@ -8,14 +8,19 @@ from . import OI_T3, OI_VIS, OI_VIS2, OI_WAVELENGTH
 
 MAS2RAD = np.pi / (180 * 3600 * 1000)
 
+
 @njit
-def _phasor(ucoord: NDArray, vcoord: NDArray, eff_wave: NDArray, dra: float, ddec: float) -> NDArray:
+def _phasor(
+    ucoord: NDArray, vcoord: NDArray, eff_wave: NDArray, dra: float, ddec: float
+) -> NDArray:
     phi = -2 * np.pi * MAS2RAD * (ucoord * dra + vcoord * ddec)
     phi = phi[..., None] / eff_wave
     return np.exp(1j * phi)
 
 
-def binary_visibility(oi_wave: OI_WAVELENGTH, oi_vis: OI_VIS|OI_VIS2, par: List) -> NDArray:
+def binary_visibility(
+    oi_wave: OI_WAVELENGTH, oi_vis: OI_VIS | OI_VIS2, par: Sequence[float]
+) -> NDArray:
     dra, ddec, eta = par
 
     phasor = _phasor(oi_vis.ucoord, oi_vis.vcoord, oi_wave.eff_wave, dra, ddec)
@@ -23,7 +28,9 @@ def binary_visibility(oi_wave: OI_WAVELENGTH, oi_vis: OI_VIS|OI_VIS2, par: List)
     return V
 
 
-def binary_bispectrum(oi_wave: OI_WAVELENGTH, oi_t3: OI_T3, par: List) -> NDArray:
+def binary_bispectrum(
+    oi_wave: OI_WAVELENGTH, oi_t3: OI_T3, par: Sequence[float]
+) -> NDArray:
     dra, ddec, eta = par
 
     phasor1 = _phasor(oi_t3.u1coord, oi_t3.v1coord, oi_wave.eff_wave, dra, ddec)
@@ -41,7 +48,7 @@ def binary_bispectrum(oi_wave: OI_WAVELENGTH, oi_t3: OI_T3, par: List) -> NDArra
 def compute_gdelay(
     visdata: np.ndarray,
     wl: np.ndarray,
-    search_range: Tuple[float, float] = (-100, 100),
+    search_range: tuple[float, float] = (-100, 100),
     search_step: float = 0.1,
     n_newton: int = 5,
 ) -> np.ndarray:

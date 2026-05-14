@@ -1,6 +1,6 @@
 from __future__ import annotations
-from typing import Any, ClassVar, Optional, Sequence, Tuple, Iterable, Mapping, TypeVar, Self
-from collections.abc import Sequence as SeqABC
+from collections.abc import Iterable, Mapping, Sequence
+from typing import Any, ClassVar, TypeVar
 
 import numpy as np
 from astropy.io import fits
@@ -19,6 +19,7 @@ def header_whitelist(hdr: fits.Header, keys: Iterable[str]) -> dict[str, Any]:
     KU = {k.upper() for k in keys}
     return {k: hdr.get(k) for k in hdr.keys() if k.upper() in KU}
 
+
 T_HDUModel = TypeVar("T_HDUModel", bound="HDUModel")
 
 
@@ -30,24 +31,24 @@ class HDUModel:
     """
 
     EXTNAME: ClassVar[str]
-    COLUMNS: ClassVar[Sequence[Tuple[str, bool]]] = ()
+    COLUMNS: ClassVar[Sequence[tuple[str, bool]]] = ()
 
     # common metadata
     header: dict[str, Any]
 
-    extver: Optional[int]
-    insname: Optional[str]
-    arrname: Optional[str]
+    extver: int | None
+    insname: str | None
+    arrname: str | None
 
     @classmethod
     def from_attrs(
         cls: type[T_HDUModel],
         *,
         extver: int = 1,
-        insname: Optional[str] = None,
-        arrname: Optional[str] = None,
-        header: Optional[Mapping[str, Any]] = None,
-        header_keys: Optional[Sequence[str]] = None,
+        insname: str | None = None,
+        arrname: str | None = None,
+        header: Mapping[str, Any] | None = None,
+        header_keys: Sequence[str] | None = None,
         strict: bool = True,
         **attrs: Any,
     ) -> T_HDUModel:
@@ -72,7 +73,15 @@ class HDUModel:
 
         obj = cls.__new__(cls)
 
-        default_keys = ["EXTNAME", "EXTVER", "INSNAME", "ARRNAME", "DATE-OBS", "OBJECT", "FRAME"]
+        default_keys = [
+            "EXTNAME",
+            "EXTVER",
+            "INSNAME",
+            "ARRNAME",
+            "DATE-OBS",
+            "OBJECT",
+            "FRAME",
+        ]
         keys = default_keys if header_keys is None else list(header_keys)
 
         src = {} if header is None else dict(header)
@@ -106,12 +115,11 @@ class HDUModel:
         obj._post_decode()
         return obj
 
-
     def __init__(
         self,
         hdul: fits.HDUList,
-        extver: Optional[int] = None,
-        header_keys: Optional[list[str]] = None,
+        extver: int | None = None,
+        header_keys: list[str] | None = None,
         strict: bool = True,
     ) -> None:
         require_extname(hdul, self.EXTNAME)
@@ -123,9 +131,17 @@ class HDUModel:
         hdr = hdu.header
         data = hdu.data
 
-        default_keys = ["EXTNAME", "EXTVER", "INSNAME", "ARRNAME", "DATE-OBS", "OBJECT", "FRAME"]
-        keys = default_keys if header_keys is None else header_keys
-        self.header = header_whitelist(hdr, keys)
+        # default_keys = [
+        #     "EXTNAME",
+        #     "EXTVER",
+        #     "INSNAME",
+        #     "ARRNAME",
+        #     "DATE-OBS",
+        #     "OBJECT",
+        #     "FRAME",
+        # ]
+        # keys = default_keys if header_keys is None else header_keys
+        self.header = hdr
 
         self.extver = int(hdr.get("EXTVER", 1))
         self.insname = hdr.get("INSNAME")
@@ -137,7 +153,9 @@ class HDUModel:
             if colname in data.names:
                 arr = np.asarray(data[colname])
                 if not arr.dtype.isnative:
-                    arr = arr.astype(arr.dtype.newbyteorder("=")) # byteswap to native endianness
+                    arr = arr.astype(
+                        arr.dtype.newbyteorder("=")
+                    )  # byteswap to native endianness
                 setattr(self, attr, arr)
             elif required and strict:
                 raise KeyError(f"Missing column {colname} in {self.EXTNAME}")
@@ -157,7 +175,7 @@ class HDUModel:
         return self.header
 
     @property
-    def extver_id(self) -> Optional[int]:
+    def extver_id(self) -> int | None:
         """Alias for ``EXTVER`` header value."""
         return self.extver
 
@@ -175,7 +193,8 @@ class HDUModel:
         for colname, _required in self.COLUMNS:
             attr = colname.lower()
             v: Any = getattr(self, attr, None)
-            if v is None: continue
+            if v is None:
+                continue
 
             a = np.asarray(v)
             # if a.dtype.kind in ("U", "S", "O") and a.ndim == 1 and a.size <= 8:
@@ -183,7 +202,7 @@ class HDUModel:
                 # short string lists: show a few values
                 parts.append(f"  {attr:10s}= {a!r},")
             else:
-                shape = str(a.shape)+ ","
+                shape = str(a.shape) + ","
                 dtype = "'" + str(a.dtype) + "'"
                 parts.append(f"  {attr:10s}= array(shape={shape:10s}dtype={dtype:6s}),")
 
@@ -194,8 +213,8 @@ class HDUModel:
     def to_hdu(
         self,
         *,
-        extver: Optional[int] = None,
-        header_overrides: Optional[Mapping[str, Any]] = None,
+        extver: int | None = None,
+        header_overrides: Mapping[str, Any] | None = None,
         flatten: bool = True,
         strict: bool = True,
     ) -> fits.BinTableHDU:
@@ -219,7 +238,9 @@ class HDUModel:
             value: Any = getattr(self, attr, None)
             if value is None:
                 if required and strict:
-                    raise KeyError(f"Missing value for required column {colname} in {self.EXTNAME}")
+                    raise KeyError(
+                        f"Missing value for required column {colname} in {self.EXTNAME}"
+                    )
                 continue
 
             if flattened and attr in flattened:
@@ -231,14 +252,18 @@ class HDUModel:
         if not arrays:
             raise ValueError(f"No columns available to encode for {self.EXTNAME}")
 
-        nrow: Optional[int] = None
+        nrow: int | None = None
         for colname, arr in arrays.items():
             if arr.ndim < 1:
-                raise ValueError(f"Column {colname} must have at least 1 dimension (rows)")
+                raise ValueError(
+                    f"Column {colname} must have at least 1 dimension (rows)"
+                )
             if nrow is None:
                 nrow = int(arr.shape[0])
             elif int(arr.shape[0]) != nrow:
-                raise ValueError(f"Column {colname} has {arr.shape[0]} rows, expected {nrow}")
+                raise ValueError(
+                    f"Column {colname} has {arr.shape[0]} rows, expected {nrow}"
+                )
         assert nrow is not None
 
         dtype_fields: list[tuple[Any, ...]] = []
@@ -281,7 +306,7 @@ class ReshapeMixin:
 
     def _reshape_fields(
         self,
-        fields: SeqABC[str],
+        fields: Sequence[str],
         outer: int,
         inner: int,
         *,
@@ -290,7 +315,8 @@ class ReshapeMixin:
         result: dict[str, np.ndarray] = {}
         for name in fields:
             value = getattr(self, name, None)
-            if value is None: continue
+            if value is None:
+                continue
             arr = np.asarray(value)
 
             # idempotent: already shaped as (outer, inner, ...)
@@ -303,13 +329,14 @@ class ReshapeMixin:
                 shape = (outer, inner, *tail) if tail else (outer, inner)
                 reshaped = arr.reshape(shape)
 
-            if inplace: setattr(self, name, reshaped)
+            if inplace:
+                setattr(self, name, reshaped)
             result[name] = reshaped
         return result
 
     def _flatten_fields(
         self,
-        fields: SeqABC[str],
+        fields: Sequence[str],
         outer: int,
         inner: int,
         *,
@@ -319,7 +346,8 @@ class ReshapeMixin:
         result: dict[str, np.ndarray] = {}
         for name in fields:
             value = getattr(self, name, None)
-            if value is None: continue
+            if value is None:
+                continue
             arr = np.asarray(value)
 
             # idempotent: already flat as (outer*inner, ...)
@@ -330,6 +358,7 @@ class ReshapeMixin:
             else:
                 flattened = arr
 
-            if inplace: setattr(self, name, flattened)
+            if inplace:
+                setattr(self, name, flattened)
             result[name] = flattened
         return result

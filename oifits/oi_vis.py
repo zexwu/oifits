@@ -1,7 +1,7 @@
 from __future__ import annotations
 from .base import HDUModel, ReshapeMixin
 from numpy.typing import NDArray
-from typing import Optional, Self
+from typing import Self
 import numpy as np
 
 
@@ -11,15 +11,18 @@ class OI_VIS(HDUModel, ReshapeMixin):
         ("TIME", True),
         ("MJD", True),
         ("INT_TIME", True),
-        ("VISAMP", False), ("VISAMPERR", False),
-        ("VISPHI", False), ("VISPHIERR", False),
-        ("UCOORD", True), ("VCOORD", True),
+        ("VISAMP", False),
+        ("VISAMPERR", False),
+        ("VISPHI", False),
+        ("VISPHIERR", False),
+        ("UCOORD", True),
+        ("VCOORD", True),
         ("STA_INDEX", True),
         ("FLAG", True),
-        ("VISDATA", False), ("VISERR", False),
+        ("VISDATA", False),
+        ("VISERR", False),
         ("CORRINDX_VISAMP", False),
         ("CORRINDX_VISPHI", False),
-
         # ("F1F2", False),
         # ("V_FACTOR", False),
         # ("GDELAY", False),
@@ -41,20 +44,20 @@ class OI_VIS(HDUModel, ReshapeMixin):
     sta_index: NDArray
     flag: NDArray
 
-    visdata: Optional[NDArray]
-    viserr: Optional[NDArray]
-    corrindx_visamp: Optional[NDArray]
-    corrindx_visphi: Optional[NDArray]
+    visdata: NDArray | None
+    viserr: NDArray | None
+    corrindx_visamp: NDArray | None
+    corrindx_visphi: NDArray | None
 
-    # f1f2: Optional[NDArray] = None
-    # v_factor: Optional[NDArray] = None
-    # gdelay: Optional[NDArray] = None
-    # gdelay_boot: Optional[NDArray] = None
-    # gdelay_ft: Optional[NDArray] = None
-    # first_ft: Optional[NDArray] = None
-    # last_ft: Optional[NDArray] = None
-    # first_met: Optional[NDArray] = None
-    # last_met: Optional[NDArray] = None
+    # f1f2: NDArray | None = None
+    # v_factor: NDArray | None = None
+    # gdelay: NDArray | None = None
+    # gdelay_boot: NDArray | None = None
+    # gdelay_ft: NDArray | None = None
+    # first_ft: NDArray | None = None
+    # last_ft: NDArray | None = None
+    # first_met: NDArray | None = None
+    # last_met: NDArray | None = None
 
     # Derived shapes
     n_bsl: int = 0
@@ -65,7 +68,9 @@ class OI_VIS(HDUModel, ReshapeMixin):
         self.n_bsl = len(np.unique(self.sta_index, axis=0))
         self.n_dit = self.mjd.shape[0] // self.n_bsl
         if self.n_bsl * self.n_dit != self.mjd.shape[0]:
-            raise ValueError("Data length must be divisible by n_bsl to determine n_dit")
+            raise ValueError(
+                "Data length must be divisible by n_bsl to determine n_dit"
+            )
         self.ucoord = self.ucoord.astype(np.float64)
         self.vcoord = self.vcoord.astype(np.float64)
         return
@@ -88,7 +93,6 @@ class OI_VIS(HDUModel, ReshapeMixin):
             if getattr(self, field) is not None:
                 setattr(self, field, getattr(self, field)[item])
         return self
-
 
     __doc__ = """Visibility table decoder (``OI_VIS``).
 

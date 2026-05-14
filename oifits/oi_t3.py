@@ -1,7 +1,7 @@
 from __future__ import annotations
 from .base import HDUModel, ReshapeMixin
 from numpy.typing import NDArray
-from typing import Optional, Self
+from typing import Self
 
 import numpy as np
 
@@ -12,11 +12,16 @@ class OI_T3(HDUModel, ReshapeMixin):
         ("MJD", True),
         ("TIME", True),
         ("INT_TIME", True),
-        ("T3AMP", True), ("T3AMPERR", True),
-        ("T3PHI", True), ("T3PHIERR", True),
-        ("U1COORD", True), ("V1COORD", True),
-        ("U2COORD", True), ("V2COORD", True),
-        ("U3COORD", False), ("V3COORD", False),
+        ("T3AMP", True),
+        ("T3AMPERR", True),
+        ("T3PHI", True),
+        ("T3PHIERR", True),
+        ("U1COORD", True),
+        ("V1COORD", True),
+        ("U2COORD", True),
+        ("V2COORD", True),
+        ("U3COORD", False),
+        ("V3COORD", False),
         ("STA_INDEX", True),
         ("FLAG", True),
         ("CORRINDX_T3AMP", False),
@@ -37,10 +42,10 @@ class OI_T3(HDUModel, ReshapeMixin):
     sta_index: NDArray
     flag: NDArray
 
-    corrindx_t3amp: Optional[NDArray] = None
-    corrindx_t3phi: Optional[NDArray] = None
-    u3coord: Optional[NDArray] = None
-    v3coord: Optional[NDArray] = None
+    corrindx_t3amp: NDArray | None = None
+    corrindx_t3phi: NDArray | None = None
+    u3coord: NDArray | None = None
+    v3coord: NDArray | None = None
 
     # User defined attributes
     n_tri: int = 0
@@ -50,7 +55,9 @@ class OI_T3(HDUModel, ReshapeMixin):
         n_tri = len(np.unique(self.sta_index, axis=0))
         n_dit = self.mjd.shape[0] // n_tri
         if n_tri * n_dit != self.mjd.shape[0]:
-            raise ValueError("Data length must be divisible by n_tri to determine n_dit")
+            raise ValueError(
+                "Data length must be divisible by n_tri to determine n_dit"
+            )
         self.n_tri = int(n_tri)
         self.n_dit = int(n_dit)
         self.u3coord = -(self.u1coord + self.u2coord)

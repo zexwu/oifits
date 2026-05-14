@@ -1,7 +1,6 @@
 from __future__ import annotations
 from .base import HDUModel
 from numpy.typing import NDArray
-from typing import Optional
 
 
 class OI_WAVELENGTH(HDUModel):
@@ -12,7 +11,7 @@ class OI_WAVELENGTH(HDUModel):
     ]
 
     eff_wave: NDArray
-    eff_band: Optional[NDArray]
+    eff_band: NDArray | None
 
     n_wave: int = 0
 

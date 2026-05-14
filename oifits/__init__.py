@@ -7,7 +7,6 @@ from .oi_flux import OI_FLUX
 from .oi import OI
 from . import utils
 
-
 __version__ = "0.1.1"
 
 GRAVITY_FT = 20
@@ -18,4 +17,15 @@ GRAVITY_SC = 10
 GRAVITY_SC_P1 = 11
 GRAVITY_SC_P2 = 12
 
-__all__ = ["OI_ARRAY", "OI_VIS", "OI_VIS2", "OI_WAVELENGTH", "OI_T3", "OI_FLUX", "OI", "utils"]
+__all__ = [
+    "OI_ARRAY",
+    "BSL2TEL",
+    "TRI2BSL",
+    "OI_VIS",
+    "OI_VIS2",
+    "OI_WAVELENGTH",
+    "OI_T3",
+    "OI_FLUX",
+    "OI",
+    "utils",
+]
